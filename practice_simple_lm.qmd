@@ -1,7 +1,7 @@
 ---
 title: "Practice: Simple Linear Regression"
 author: 
-  - "Student Name"
+  - "Lela Gi"
   - "DS303, SP25"
   - "Prof. Amber Camp"
 date: 1/17/25
@@ -34,7 +34,7 @@ What is the difference between *y* = *b~0~* + *b~1~x* and *y* = *mx* + *b*, and 
 
 #### Answer:
 
-(write your answer here)
+The difference between the two formulas are in notation. Both of them are ordered differently as well as include different variables for the slope and y-intercept (m vs b1 & b0 vs b).
 
 ### Question 2
 
@@ -42,7 +42,9 @@ Think back to our class discussion and your previous studies in math. Tell me be
 
 #### Answer:
 
-(write your answer here)
+*y* = *b~0~* + *b~1~x*
+
+In this formula, y = the output (or dependent variable), *b~0~* = the y-intercept, *b~1~* = the slope, and x = the independent variable.
 
 ## Let's try it
 
@@ -67,13 +69,24 @@ You can just call upon the data (it's already in the package). I'll get you star
 
 ```{r}
 head(Boston)
+View(Boston)
+```
 
+```{r}
+library(ggplot2)
+
+ggplot(data=Boston, aes(x= lstat, y=medv)) + geom_line() 
+#looking if theres a relationship between lstat and medv
+
+ggplot(data=Boston, aes(x= rm, y=medv)) + geom_line() 
+#looking if theres a relationship between room number and medv
 ```
 
 We learned in class that we can apply a simple linear regression using `lm`. Here is the basic format:
 
 ```{r}
 model <- lm(y ~ x, data=df)
+#tilde
 ```
 
 ### Question 4
