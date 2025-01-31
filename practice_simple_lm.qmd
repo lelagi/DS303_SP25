@@ -94,12 +94,14 @@ model <- lm(y ~ x, data=df)
 Use the above basic format to create a linear regression model to predict the **median home value** (medv) based on the **percentage of lower status population** (lstat), using the data from the 'Boston' dataset. Assign it to the variable `lm.model`.
 
 ```{r}
-
+lm.model <- lm(medv ~ lstat, data=Boston)
 ```
 
 If you set it up right, you should be able to run your model name in the below code chunk and view the basic model output. Give it a try:
 
 ```{r}
+#View(lm.model)
+lm.model
 
 ```
 
@@ -109,12 +111,22 @@ What is your model output telling you?
 
 #### Answer
 
-(write your answer here)
+The model output for lm.model shows that the x-intercept is 34.55, which is the percentage of lower status population when the median home value equals 0. Along with this, the lstat is -0.95.
 
 You can also try `summary(lm.model)`.
 
 ```{r}
 summary(lm.model)
+##class notes 1.29
+##r squared means about 54% of medv value can be explained by lstat
+
+##residuals is the difference between actual and predicted
+
+##intercept when lstat is at 0, medv is 34.55
+
+##lstat = -0.95 means for every increase in lstat by 1, medv goes -0.95
+
+##cmnd,, option, i
 ```
 
 ### Question 6
@@ -123,7 +135,7 @@ What additional information do you get from this summary of the model output?
 
 #### Answer
 
-(write your answer here)
+Looking at the summary, the output also provides what you called (the formula), the residuals (such as the min, quartiles, median, and max), the coefficients (such as the estimated standard deviation, errors, t-values, ect), the significant codes, and residual standard error.
 
 ## confint() and predict()
 
@@ -143,7 +155,7 @@ What do you think the above `confint()` and `predict()` information means? It's 
 
 #### Answer
 
-(write your answer here)
+I'm not too sure what either call means, but I would guess confint() information of 2.5% and 97.5% means it is 97.5% sure the formula works in most cases and has a 2.5% chance of being incorrect. For the predict() output I would think it is predicting that lower and upper quartiles. For example, in the first case, the lstat is around 29.80.
 
 ## Visualizing
 
@@ -159,7 +171,10 @@ abline(lm.model)
 Can you convert the above code chunk to `ggplot`? Try below. Have fun with editing the appearance of your plot if you'd like :)
 
 ```{r}
-
+library(ggplot2)
+ggplot(data=Boston, aes(x=lstat, y=medv)) +
+  geom_line() +
+  geom_smooth()
 ```
 
 In a future class, we'll explore some diagnostic plots and what that means for evaluating models. For now, just run the below and have a look:
@@ -185,7 +200,7 @@ What variables are you interested in exploring using a linear regression? Just p
 
 #### Answer
 
-(write your answer here)
+I am interested in exploring the relationship between the two variables of indus and crim. I hypothesize that there is a correlation between crim, the crime rate by town per capita, and indus, the proportion of non-retail business acres per town. In this case, I would put indus as my indepent variable x and crim as the dependent variable of y. In plain English, this would translate to "how does the amount of non-retail businesses (per town) affect crime rate (per capita) in Boston?"
 
 ### Question 10
 
@@ -195,8 +210,7 @@ Build and run your model, examine the model output:
 
 ```{r}
 
-
-
+lm(crim ~ indus, data = Boston)
 
 ```
 
@@ -206,7 +220,7 @@ Explain what you found in plain English. Do your best.
 
 #### Answer
 
-(write your answer here)
+In the linear regression equation involving the x variable of indus and y of crim, the model found that the intercept of when x=0 is -2.06 which means when there are 0 non-retail business in town, there is a crime rate of -2.06. Along with this, the slope of how much the indus goes up per 1 is 0.51, which means there is a slow but increasing slope.
 
 ## The end!
 
