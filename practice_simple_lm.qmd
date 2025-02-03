@@ -36,6 +36,8 @@ What is the difference between *y* = *b~0~* + *b~1~x* and *y* = *mx* + *b*, and 
 
 The difference between the two formulas are in notation. Both of them are ordered differently as well as include different variables for the slope and y-intercept (m vs b1 & b0 vs b).
 
+#one is used in more statistical formulas and the other isnt
+
 ### Question 2
 
 Think back to our class discussion and your previous studies in math. Tell me below what each part of the equation *y* = *b~0~* + *b~1~x* means. Do this from memory if you can!
@@ -70,6 +72,9 @@ You can just call upon the data (it's already in the package). I'll get you star
 ```{r}
 head(Boston)
 View(Boston)
+
+#Boston <-data(Boston)
+#Boston <-Boston
 ```
 
 ```{r}
@@ -157,6 +162,10 @@ What do you think the above `confint()` and `predict()` information means? It's 
 
 I'm not too sure what either call means, but I would guess confint() information of 2.5% and 97.5% means it is 97.5% sure the formula works in most cases and has a 2.5% chance of being incorrect. For the predict() output I would think it is predicting that lower and upper quartiles. For example, in the first case, the lstat is around 29.80.
 
+#in class 2.3 - confint(lm.model) is used to calculate the confidence intervals for the coeffs(parameters) of the lm model. It provides a range within which we can be confident that the true value of the coeff lies, based on the sample data.
+
+The first predict() = looking at confidence intervals of pred values of y...
+
 ## Visualizing
 
 Here is a simple base R way to plot this data:
@@ -225,3 +234,20 @@ In the linear regression equation involving the x variable of indus and y of cri
 ## The end!
 
 That's it for now. Please feel free to raise questions in class or via email!
+
+# Feb 3 Classwork
+
+```{r}
+lm.int1 <- lm(tax ~ age + rm, data = Boston)
+summary(lm.int1)
+
+#standard/shorthand
+lm.int <- lm(tax ~ age * rm, data = Boston)
+summary(lm.int)
+
+lm.int2 <- lm(tax ~ age + rm + age:rm, data = Boston)
+```
+
+## Answer:
+
+For my model, I used the variables of tax, rm, and age. In the summary, the age slope goes up 6.47 every 1 it increases, the rm goes up 0.11 every 1 increased, and the age:rm decreases -0.58 every 1 increased. Only the age is statistically significant.
