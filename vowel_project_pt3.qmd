@@ -1,0 +1,247 @@
+---
+title: "Vowel Analysis Final Report"
+author: 
+  - "Lela Gi"
+  - "DS303, SP25"
+  - "Prof. Amber Camp"
+date: 3/14/25
+format: html
+toc: true
+editor: visual
+theme: spacelab
+---
+
+## Vowel Analysis Final Report
+
+### Load packages
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+
+# install.packages("phonR")
+library(phonR)
+```
+
+## Load data
+
+Load your personal data (make sure you update from P110 -\> your P#)
+
+```{r}
+# read in data
+P110 <- read_csv("data/P110.csv")
+
+# convert variables to factor where needed
+convert_to_factor <- function(df, cols) {
+  df[cols] <- lapply(df[cols], as.factor)
+  return(df)
+}
+
+P110 <- convert_to_factor(P110, c("ppt", "word", "ipa", "arpa", "onset", "offset", "environment", "real_word", "sex", "ethnicity", "birthplace", "home_state", "years_lived_hi", "L1", "exposure_langs_yn", "exposure_langs", "speak_other", "item_num", "rep"))
+
+# remove a couple words you won't be needing
+P110 <- P110 %>%
+  dplyr::filter(!word %in% c("cot", "caught")) # added dplyr to specify which 'filter' to use
+
+```
+
+Class data:
+
+```{r}
+# read in data
+all_data <- read_csv("data/DS303_combined.csv")
+
+# convert variables to factor where needed
+all_data <- convert_to_factor(all_data, c("ppt", "word", "ipa", "arpa", "onset", "offset", "environment", "real_word", "sex", "ethnicity", "birthplace", "home_state", "years_lived_hi", "L1", "exposure_langs_yn", "exposure_langs", "speak_other", "item_num", "rep"))
+
+# remove a couple words you won't be needing
+all_data <- all_data %>%
+  dplyr::filter(!word %in% c("cot", "caught"))
+
+```
+
+## Explain the Data
+
+(1 point)
+
+The data used in this project comes from the class of Modeling for Prediction (DS303) where all students are accounted for. With 14 students, all participants recorded several voice recordings citing different words and sentences. This was done in hopes of testing to see the different aspects of speech. This specifically focuses on vowels and whether or not there are different pitches, tones, or any significant differences of information we can take from these voice recordings.
+
+There are two forms of datasets that exists. The first being the classes dataset as a collective, which includes all students data anonymized and put together. This is encaptured as "all_data" and has 1201 observations with 26 variables. The second is a student's individual results, labeled as "P110." Here, this dataset is called "P110" and has 94 observations with 26 variables. Both datasets include the same variables while differentiating in observations. Variables include:
+
+-   item_num: The experimental item number
+
+-   rep: The "repeat" number, meaning as if it was the first, second, or third time the word was read
+
+-   ppt: The participant number
+
+-   word: The word that was read
+
+-   f0: The pitch of the speaker's voice in Hz
+
+-   f1: The first formant, which inversely correlates to vowel height (tongue height)
+
+-   f2: The second formant, which correlates to vowel frontness or backness
+
+-   duration: The duration of the word in miliseconds
+
+-   ipa: The vowel symbol from the International Phonetic Alphabet
+
+-   arpa: The vowel symbol (digraph) in the **Advanced Research Projects Agency (ARPAbet)**
+
+-   onset: Whether the beginning of the word was voiced or voiceless
+
+-   offset: Whether the end of the word was voiced or voiceless
+
+-   environment: the voicing environment encasing the vowel
+
+-   real_word: Is this word real or not real?
+
+-   age: The speaker's age
+
+-   years_uni: How many years the speaker has been in college/university
+
+-   sex: The speaker's sex
+
+-   ethnicity: The speaker's ethnicity/race
+
+-   birthplace: The speaker's place of birth
+
+-   home_state: The speaker's home state/country
+
+-   years_lived: How many years the speaker has lived In HI, expressed as a categorical range
+
+-   L1: The speaker's first language
+
+-   exposure_langs_yn: Yes/No whether the speaker had exposure to another language growing up
+
+-   exposure_langs: Which language(s) the speaker was exposed to growing up
+
+-   age_learned_en: The age the speaker learned English
+
+-   speak_other: Other languages spoken by the speaker
+
+Some steps that were taken after our recordings to process the data was that it was first processed through sophisticated software which was processed and scripted through two research assistants. With the help of Lydia Hefel and Logan Lasell, they were able to put all of our raw data into readable and accessible files. This allows anyone to work with it, import it, and use the data. After this, some variables were converted into factors as well as removing the words "cot" and "caught" from the data.
+
+## Variables of Interest
+
+(1 point)
+
+The purpose of this project is to test and see the different aspects of speech with specifically focusing on vowels. Here, the project aims to investigate whether or not there are different pitches, tones, or any significant differences from the data we took through the voice recordings.
+
+The variables I will be exploring for this project are f0 (pitch), duration, and age. F0 is essentially the pitch of the speakers voice and is measured through Hz. Duration is how long it took to say the word and was meassured in milliseconds. Age is the person's years that they have been alive. I would like to use these two variables to see and explore if they correlate with age.
+
+Research Question: Are we able to predict ones age with the duration of how they say their word or sentence? Does duration play a role?
+
+Hypothesis: I hypothesize duration and pitch are a significant factor in predicting someones age. With this, as age increases, pitch will decrease, and duration will increase.
+
+## EDA and Vowel Plots
+
+(3 points)
+
+```{r}
+#EDA
+#linear model with confidence interval
+library(ggplot2)
+#install.packages("hrbrthemes")
+library(hrbrthemes)
+
+#all data
+ggplot(all_data, aes(x= duration, y= f0, color = age)) +
+  geom_point() +
+  geom_smooth(method=lm, color = "red", fill= "#69b3a2", se = TRUE) +
+  theme_ipsum()
+
+#P110
+ggplot(P110, aes(x= duration, y= f0, color = age)) +
+  geom_point() +
+  geom_smooth(method=lm, color = "red", fill= "#69b3a2", se = TRUE) +
+  theme_ipsum()
+
+library(dplyr)
+#scatterplot
+
+#all data
+ggplot(all_data, aes(x= duration, y=f0, color = age)) +
+  geom_line() +
+  geom_point()
+
+#P110
+ggplot(P110, aes(x= duration, y=f0, color = age)) +
+  geom_line() +
+  geom_point()
+```
+
+```{r}
+#VOWEL PLOTS
+#making a vowel plot using phonR with class data - https://drammock.github.io/phonR/
+with(all_data, plotVowels(f1, f2, ipa, group = ipa, plot.tokens = FALSE, plot.means = TRUE, 
+    pch.means = ipa, cex.means = 2, var.col.by = ipa, var.sty.by = ppt, ellipse.line = TRUE, 
+    ellipse.fill = TRUE, fill.opacity = 0.1, pretty = TRUE))
+
+#making a vowel plot using phonR with my data
+with(P110, plotVowels(f1, f2, ipa, group = ipa, plot.tokens = FALSE, plot.means = TRUE, 
+    pch.means = ipa, cex.means = 2, var.col.by = ipa, var.sty.by = ppt, ellipse.line = TRUE, 
+    ellipse.fill = TRUE, fill.opacity = 0.1, pretty = TRUE))
+
+```
+
+After reviewing the vowel plot for the class, student P110's data shows that their height is more narrow with ipa values compared to the classes. This goes onto support that in their data, they have more variability in the values.
+
+After looking through my linear model with a confidence level, I am able to see how pitch decreases as duration increases. This means, the longer the sentence/word was spoken, the level of Hz went lower. Earlier, I hypothesized that as age increases, pitch will decrease, and duration will increase. Here, this visualization depicts that people of higher age tend to have lower f0 scores (pitch) but duration wise they were not as long as I hypothesized. Instead, they mostly ranged from the early-mid duration levels rather than the higher times which one of indicated longer response time.
+
+## Model Selection and Justification
+
+(3 points)
+
+I am using linear regression models to investigate the relationship between my predictors of duration and f0 (pitch) and my outcome variable of age. I chose to use linear rather than logistic or mixed effects models because the variables I am working with are continuous variables and not categorical, which logistic regression is better fitted for. In model1, I will use a linear regression model trying to predict age with the variable of duration. In model2, I will use a linear regression model again by predicting age but with the variable of f0 (pitch). In model3, I will create a multiple linear regression model by combining the two variables of f0 (pitch) and duration to predict age.
+
+## Model Comparisons and Best Fit
+
+(3 points)
+
+-   
+
+    ```{r}
+    #simple lm for predicting age with the variable duration
+    model1 <- lm(age ~ duration, data = all_data)
+    summary(model1)
+
+    #results:
+    #is not a significant test except intercept is
+
+    #simple lm for predicting age with the variable f0 (pitch)
+    model2 <- lm(age ~ f0, data = all_data)
+    summary(model2)
+
+    #results:
+    #is significant test
+
+    #multiple linear regression model with two variables predicting age
+    model3 <- lm(age ~ f0 + duration, data = all_data)
+    summary(model3)
+
+    #result is significant in intercept, f0, and duration but not as much on duration
+    ```
+
+    The two models are both great models as both show high significance. Comparing the two together, model3, the model using the variables of f0 and duration, showed three asterisks in the intercept and f0, but only two asterisks in duration. In model2, the model with only f0 as the variable, it had three asterisks in predicting age which also meant it was highly significant. While both models were highly significant, model3 having two variables rather than one leaves room for it to have two asterisks in duration instead of three. Model3 looks to be the better model for it had a higher R^2^ score and a decrease in the residual standard error score, which improves accuracy.
+
+## Interpretation of Results
+
+(3 points)
+
+For model2, the simple linear regression model that predicted age with the variable of f0 (pitch), the intercept was 27.54. This means that when f0 was 0, the predicted age for a person was 27.54. The f0 coefficient was -0.030, which meant that for every 1 unit increase in f0 (pitch), the age decreased by 0.03 years. The p-value was 5.3e-16 and was highly significant. This means that the model was highly significant for being a predictor of age with the variable of f0 (pitch).
+
+For model3, the multiple linear regression model that predicted age with the variables of f0 and duration, the intercept was 30.94. This means that when both f0 and duration are at 0, the predicted age is 30.94 years. When the f0 coefficient was -0.0346, it means that for every 1 unit increase in f0, the predicted age would decrease by 0.0346 years. When the duration coefficient was -0.0069, it means that for every 1 unit increase in duration, the predicted age would decrease by 0.0069 years. This would suggest that longer speech durations are associated with younger individuals. For significance levels, f0 remained highly significant because it showed the p value was p \<2e-16 which means pitch is still a strong predictor of age. Along with this, duration was also significant because p= 0.0094 which means it still contributed to predicting age, but it is weaker than f0.
+
+Both f0 and duration negatively affect age, which leads to high f0 levels (high pitch) correlating to younger ages and the longer speech duration also correlating to younger age. Overall, the variable f0 (pitch) was a stronger variable when predicting age compared to duration, which suggests f0 is the main variable of age prediction while duration provided a slight improvement to the model.
+
+## Discussion and Conclusion
+
+(3 points)
+
+After running and seeing the results from both models, I was successfully able to explore the relationship between the variables of f0 (pitch) and duration to predict the age while using linear regression models. After seeing the summaries, it was found that f0 is a stronger predictor of age compared the duration. With this, it is suggested that a higher pitch is associated with younger individuals and a lower pitch corresponded to older individuals. The effect of pitch on age was statistically significant. As an additional model, I investigated with model3 of adding duration as a variable and seeing if it impacted age as an additional predictor. While duration also showed a significant relationship with age, the effect was a little smaller compared to f0. It suggested that longer duration is associated with younger people in contrast to my original hypothesis. The multiple regression model explained slightly more variance in age than the model of f0 alone.
+
+Overall, the findings show that f0 is the main factor in predicting age, with younger people having higher pitches and older having lower pitches. Duration also plays a role, but its impact is not as large. This suggests that pitch can help estimate a persons age. This could be useful in fields such as voice recognition software or the police force to help identify any recordings and even help identify specific people if one was under a search.
+
+Some limitations in this project was that the data is reflective of a small group of students with similar characteristics, which may be probable if you were to compare the results elsewhere for it would not accurately depict or be a good use for generalization. Along with this, the recordings were not of normal use and are sentences most people would not typically say. The voice recordings consisted of a lot of fake words and most of the time did not make sense, which could affect the way some people pronounce or speak the words. Lastly, the voice recordings were recorded in an office under a microphone, so it can be seen as an atypical, controlled environment.
