@@ -1,0 +1,231 @@
+---
+title: "Model Selection with Train/Validate/Test"
+format: html
+editor: visual
+author: "Lela Gi"
+---
+
+# Assignment 3: Model Selection with Train/Validate/Test
+
+You’ll turn this `.qmd` file in as your final modeling assignment. Save, commit, and push to GitHub. Then, go to Canvas and type "Submitted" under the assignment submission. Assignment due Sunday 4/6 at 11:59 pm.
+
+------------------------------------------------------------------------
+
+In this activity, you'll practice selecting the best predictive model using a **train/validate/test split**. This is one step beyond a train/test split.
+
+You’ll compare multiple models using both *in-sample evaluation* (like AIC and ANOVA) and *out-of-sample validation* (using RMSE). You'll then evaluate your final model on a held-out test set.
+
+## Why Use Train/Validate/Test Instead of Just Train/Test?
+
+In a basic train/test split:
+
+-   You train your model on one part of the data
+
+-   You test its performance on the rest
+
+But what if you want to compare multiple models?
+
+If you use the test set to pick the best one, you've “peeked” — and the test set is no longer a fair estimate of how your model performs on truly unseen data.
+
+So we add a **validation set**:
+
+-   **Training set** → Fit multiple models
+
+-   **Validation set** → Choose the best model
+
+-   **Test set** → Evaluate final model performance
+
+This approach helps prevent overfitting and gives you a more realistic estimate of how your model will perform in the real world.
+
+## Set Up Packages
+
+Add packages as needed.
+
+```{r}
+# Setup
+library(tidyverse)
+library(caret)
+library(Metrics)
+set.seed(42)  # for reproducibility
+```
+
+## Dataset Requirements
+
+You may choose your own dataset for this assignment.
+
+Choose a dataset that:
+
+-   Has a numeric outcome variable you want to predict
+
+-   Contains at least 3-4 predictors (numeric or categorical)
+
+-   Is either:
+
+    -   A built-in dataset in R (e.g., `diamonds`, `Boston`, `iris`, `mtcars`, `airquality`, `penguins`, etc.)
+    -   From your final project
+    -   Any other dataset we've used in class
+
+> If you're not sure what dataset to use, try `Boston`:
+
+```{r}
+library(MASS)
+data <- diamonds # read in your data here
+```
+
+## Step 1: Split the Data
+
+Split the data into: 60% training, 20% validation, and 20% test
+
+```{r}
+# edit below as needed
+train_index <- createDataPartition(diamonds$price, p = 0.6, list = FALSE)
+train_data <- diamonds[train_index, ] # training data
+temp_data <- diamonds[-train_index, ]
+
+val_index <- createDataPartition(temp_data$price, p = 0.5, list = FALSE)
+val_data <- temp_data[val_index, ] # validation data
+test_data <- temp_data[-val_index, ] # test data
+```
+
+## Step 2: Fit Multiple Models
+
+Create at least three models of increasing complexity:
+
+```{r}
+# edit below as needed
+#NOTES
+#lower rmse than a higher adjusted r squared value
+#look for lower acs, anova, and aic? 
+model_1 <- lm(price ~ carat, data = train_data)
+model_2 <- lm(price ~ carat + cut + color, data = train_data)
+model_3 <- lm(price ~ carat * cut + color + clarity, data = train_data)
+
+summary(model_1)
+summary(model_2)
+summary(model_3)
+```
+
+**Questions:**
+
+-   Which model seems to be the best fit according to the Adjusted R^2^ value?
+
+    ANSWER: Model1 has a R^2^ value of 0.8519, Model2 with 0.8787, and Model3 with 0.9191. With model3 having the highest R^2^ value, I would say that seems to be the best fit based off the training data.
+
+> You may look at R² and Adjusted R² on the training set to help understand model fit, but to ultimately choose the best model, you'll use RMSE on the validation set below.\
+> RMSE gives you a more honest view of how well your model predicts on new data.
+
+## Step 3: Compare Using AIC and ANOVA
+
+> -   AIC helps you compare model fit while penalizing complexity
+>
+> -   ANOVA tests whether adding predictors significantly improves the model
+
+```{r}
+# AIC
+AIC(model_1)
+AIC(model_2)
+AIC(model_3)
+
+# ANOVA for nested comparisons
+anova(model_1, model_2)
+anova(model_2, model_3)
+```
+
+**Questions:**
+
+-   Which model has the lowest AIC?
+
+    ANSWER: Model3 has the lowest AIC with a score of 547068.3.
+
+-   Are the improvements in fit (from the `anova` output) statistically significant?
+
+    ANSWER: Model3 in the anova output is statistically significant with three asterisks, whereas model2 in the anova output is not as much for it has no asterisks.
+
+## Step 4: Evaluate on the Validation Set (RMSE) (new)
+
+The validation set allows us to compare models fairly and reevaluate our choices before making a final decision. If a model performs well on training but poorly on validation, we might consider simplifying or adjusting the model before moving on to the test set.
+
+```{r}
+# edit below as needed
+rmse(val_data$price, predict(model_1, val_data))
+rmse(val_data$price, predict(model_2, val_data))
+rmse(val_data$price, predict(model_3, val_data))
+```
+
+**Questions:**
+
+-   Which model performed best on the validation set?
+
+    ANSWER: Model3 performed bested on the validation set with a score of 1156.208.
+
+-   Does that match what AIC/ANOVA suggested?
+
+    ANSWER: This matches AICs and ANOVAs suggestion, as both AIC and ANOVA suggested that model3 was the best fit. Overall, all three models suggest model3 is the best fit.
+
+## Step 5: Choose the Best Model
+
+Pick the model with the best validation RMSE. Assign it to a variable called `final_model`. This isn't a "required" step, but it keeps things neat when you only need to define the final model in one spot.
+
+```{r}
+final_model <- model_3
+```
+
+## Step 6: Test the Final Model
+
+Now evaluate your chosen model on the test set:
+
+```{r}
+# edit below as needed
+rmse(test_data$price, predict(final_model, test_data))
+```
+
+**Questions:**
+
+-   Is the test RMSE close to the validation RMSE?
+
+    ANSWER: Yes, the test RMSE is close to the validation RMSE with the test RMSE score being 1145.157 and the validation RMSE being 1156.208. This is only a difference of 11.051!
+
+-   What does that say about how well the model generalizes?
+
+    ANSWER: The differences between the two are not that high, which is good. This also goes on to show how model 3 was predicted to be the best model and that it even came out being the best one.
+
+## Step 7: Compare All RMSE Values
+
+```{r}
+# edit below as needed
+rmse(train_data$price, predict(final_model, train_data)) # training set
+rmse(val_data$price, predict(final_model, val_data)) # validation set
+rmse(test_data$price, predict(final_model, test_data)) # test set
+```
+
+**Questions:**
+
+-   Is there a big gap between training and validation/test RMSE? If so, does that suggest overfitting?
+
+    ANSWER: No, there is not a big gap between the training and validation test RMSE. This means overfitting is not suggested and that both are significant.
+
+## Summary Questions
+
+Answer the following. Use full sentences.
+
+1.  Which model did you choose, and why?
+
+    ANSWER: I chose model3 because after testing models 1-3 under AIC, ANOVA, and RMSE, model3 had the lowest AIC score, model3 was statisstically more significant compared to model2 when testing in the ANOVA model, and model3 had the lowest RMSE score out of all three models, which indicates better model performance.
+
+2.  What were the AIC values for each model?
+
+    ANSWER: The AIC values for each model were: 566600.1 for model1, 561705.7 for model2, and 547068.3 for model3.
+
+3.  Did ANOVA support the improvements?
+
+    ANSWER: Yes, ANOVA supported the improvements by showcasing model3 continued to be the best model with being a significantly strong model.
+
+4.  What were the RMSE values for training, validation, and test sets?
+
+    ANSWER: The RMSE values training, validation, and test sets were: 1132.431 for model1, 1156.208 for model2, and 1145.157 for model3.
+
+5.  How confident are you that your model will generalize well?
+
+    ANSWER: I am very confident that my model will generalize well due to model3 performing the best out of the AIC, ANOVA, and RMSE tests. With having the highest R\^2 value, lowest AIC score, and lowest RMSE score, model3 tests the best and should be the best performing model out of the three.
+
+*Reminder: Your chosen model should balance good in-sample fit (R², AIC) with strong out-of-sample performance (validation RMSE), and generalize well to the test set. You don’t have to pick the “most complex” model — just the one that performs reliably and addresses the research question.*
