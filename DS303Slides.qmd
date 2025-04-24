@@ -1,0 +1,195 @@
+---
+title: "Global Traffic Accidents"
+author: "Lela Gi"
+institute: "Chaminade University"
+date: "4/23/25"
+format: 
+  revealjs:
+    theme: league
+editor: visual
+---
+
+## Background Information
+
+-   Global Traffic Accidents Dataset retrived from Kaggle
+-   Synthetically generated but based on real-world traffic accident trends and patterns drawn from inspiration from publicly available reports, research papers, and statistical records from global sources
+-   Contains 10,000 records of traffic accident reports from various locations worldwide
+-   Includes variables such as date, time, location, weather, road conditions, and accident causes #plus more
+-   Created two new columns for exploration and analysis
+
+
+## Why It's Important
+
+-   Can provide crucial insights into accident patterns, causes, and contributing factors
+-   Helps researchers, policymakers, and AI developers analyze trends and improve road safety
+
+# Exploratory Data Analysis
+
+## Bar Chart of Number of Traffic Accidents by Cause
+
+```{r, echo = FALSE}
+#dont show on slides
+library(dplyr)
+library(lubridate)
+library(hms)
+library(ggplot2)
+library(hrbrthemes)
+library(readr)
+```
+
+```{r, echo = FALSE}
+#dont show on slides
+#LOAD DATA AND CLEAN
+#Loading in file
+gta <- read_csv("DS303_Final/global_traffic_accidents.csv")
+
+#View(gta)
+
+#seeing the unique values in each column
+#sapply(gta, n_distinct)
+
+#Renaming columns for easier calls
+gta$'Accident ID' <- 1:nrow(gta) #changed  Accident ID to just numbers
+
+#Changing date from from y/m/d to m/y
+gta$Date <- format(gta$Date, "%B %Y")
+
+#Adding new column called TimeOfDay for times of day based on Time column
+gta$TimeOfDay <- case_when(
+  hour(gta$Time) >= 5 & hour(gta$Time) < 12 ~ "Morning",
+  hour(gta$Time) >= 12 & hour(gta$Time) < 17 ~ "Afternoon",
+  hour(gta$Time) >=17 & hour(gta$Time) < 21 ~ "Evening", 
+  TRUE ~ "Night"
+)
+
+#checking the structure of the dataset
+#str(gta)
+
+#Converting neccessary variables to factors
+convert_to_factor <- function(df, cols) {
+  df[cols] <- lapply(df[cols], as.factor)
+  return(df)
+}
+
+gta <- convert_to_factor(gta, c("Date", "Location", "Weather Condition", "Road Condition", "Cause", "TimeOfDay"))
+
+```
+
+
+```{r}
+#Bar Chart of Number of Traffic Accidents by Cause
+plot1 <- ggplot(gta, aes(y=Cause, , fill = Cause)) +
+  geom_bar() +
+  labs(x = "Cause", y = "Count", title = "Number of Traffic Accidents by Cause") 
+
+plot1
+```
+
+## Bar Plot of Accidents by Time of Day
+
+::: {.panel-tabset group="language"}
+## Code
+
+```{r, echo = TRUE}
+#Changing date from from y/m/d to m/y
+#gta$Date <- format(gta$Date, "%B %Y")
+
+#Adding new column called TimeOfDay for times of day based on Time column
+gta$TimeOfDay <- case_when(
+  hour(gta$Time) >= 5 & hour(gta$Time) < 12 ~ "Morning",
+  hour(gta$Time) >= 12 & hour(gta$Time) < 17 ~ "Afternoon",
+  hour(gta$Time) >=17 & hour(gta$Time) < 21 ~ "Evening", 
+  TRUE ~ "Night"
+)
+
+#Bar Plot of Accidents by Time of Day
+plot2 <- ggplot(gta, aes(x = TimeOfDay)) +
+  geom_bar(fill = "pink") +
+  labs(title = "Accidents by Time of Day",
+       x = "Time of Day",
+       y = "Number of Accidents") 
+
+```
+
+## Result
+
+```{r}
+plot2
+```
+
+:::
+
+
+
+## Bar plot of casualties by road condition
+
+```{r}
+#Box plot of casualties by weather condition
+#Box plot of casualties by weather condition
+plot5 <- ggplot(gta, aes(y= Casualties, x =`Road Condition`)) +
+  geom_bar(stat = "identity", fill = "orchid") +
+  labs(x = "Road Conddition", y = "Number of Casualties", title = "Casualties by Road Condtion")
+
+plot5
+```
+
+# Model Selection, Comparison, & Interpretation
+
+
+```{r, echo = FALSE}
+#dont show
+#making a new column called "Injury" and it is the binary version of casualties (0= no casualties occured, 1= at least 1 casualty occured).
+gta$Injury <- ifelse(gta$Casualties > 0, 1, 0)
+
+```
+
+## Model 1
+```{r}
+model1 <- glm(Injury ~ `Weather Condition` + `Road Condition` + TimeOfDay + `Vehicles Involved` + Cause,
+              data = gta,
+              family = binomial)
+summary(model1)
+```
+
+
+## Model1s Significance
+
+<div style="height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+
+In the logistic regression model, I made a new variable called "Injury" basing it off whether a casualty occured or not (similar to dummy coding). Here, I tried to model the log odds of an injury occuring based on the predictor variables of weather, road condition, the time, vehicles involved, and cause. With the intercept being 2.42, this indicates the baseline log odds of injury when all other variables were at their reference levels.  The key significant predictors found was when the weather condition was fog and rain. This increased the log-odds of injury significantly with fog having an increase of 0.31 and rain of 0.26. In this model, most of the predictor variables was classified as a non-significant predictor (time of day, number of vehicles, causes, etc) and did not significantly affect the probability of injury in this model
+
+</div>
+
+## Model 2
+```{r}
+model2 <- glm(Injury ~ `Weather Condition` * `Road Condition` + TimeOfDay + `Vehicles Involved` + Cause,
+              data = gta,
+              family = binomial)
+summary(model2)
+```
+
+## Model2s Significance
+
+<div style="height: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+
+In the second model, I included an interaction term between weather condition and road condition. The intercept was 2.31, which represents the baseline log odds of injury and also gives us the starting point when all other variables are at their reference levels.
+Key significant predictors in this model was the weather condition rain and the road condition gravel. When the weather was rainy, the log odds of injury increased by 0.842, and when gravel was present, the log odds increased by 0.548. These results suggest that both weather conditions and road conditions significantly raise the likelihood of an injury occurring. Similar to the first model, many of the other variables, such as the number of vehicles involved and the time of day, were not statistically significant and did not substantially impact the probability of injury. This indicates that, for this particular model, weather conditions with the interaction term of road conditions was crucial roles in predicting injuries.
+
+</div>
+
+## Comparing the Two Models
+```{r}
+AIC(model1, model2)
+```
+
+## Best fit model
+Even though Model2 added an interaction term between weather and road, the AIC actually increased from 5957.95 to 5986.80. Since lower AIC is better, this means the interaction didn't improve the models fit. Thus, Model1, the simplier model, is the best fit. 
+
+
+## Limitations and Next Steps
+-   Being a synthetic dataset, not too much trust in the data
+-   Surprised with a lot of the data results
+-   Work with the publicly available records they pulled from instead
+-   Continue to work on the basics (eda, choosing which variables to include)
+
+# Thank you!
